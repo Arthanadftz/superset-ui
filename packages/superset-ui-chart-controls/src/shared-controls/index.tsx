@@ -438,6 +438,19 @@ const adhoc_filters: SharedControlConfig<'AdhocFilterControl'> = {
   }),
 };
 
+const custom_filters: SharedControlConfig<'CustomFilterControl'> = {
+  type: 'CustomFilterControl',
+  label: t('Custom Filters'),
+  default: null,
+  description: '',
+  mapStateToProps: ({
+    datasource
+  }) => ({
+    datasource
+  }),
+  provideFormDataToProps: true
+};
+
 const color_scheme: SharedControlConfig<'ColorSchemeControl'> = {
   type: 'ColorSchemeControl',
   label: t('Color Scheme'),
@@ -490,6 +503,7 @@ const sharedControls = {
   y_axis_format,
   x_axis_time_format,
   adhoc_filters: enableExploreDnd ? dnd_adhoc_filters : adhoc_filters,
+  custom_filters,
   color_scheme,
   label_colors,
 };
