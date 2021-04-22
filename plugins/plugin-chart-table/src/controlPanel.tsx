@@ -18,9 +18,17 @@
  * under the License.
  */
 import React from 'react';
-import { t, validateNonEmpty, addLocaleData, smartDateFormatter } from '@superset-ui/core';
 import {
-  formatSelectOptions,
+  t,
+  addLocaleData,
+  smartDateFormatter,
+  QueryMode,
+  QueryFormColumn,
+  ChartDataResponseResult,
+  isFeatureEnabled,
+  FeatureFlag,
+} from '@superset-ui/core';
+import {
   D3_TIME_FORMAT_OPTIONS,
   ControlConfig,
   ColumnOption,
@@ -28,38 +36,22 @@ import {
   ControlPanelConfig,
   ControlPanelsContainerProps,
   sharedControls,
+  sections,
+  QueryModeLabel,
 } from '@superset-ui/chart-controls';
 
 import i18n from './i18n';
+import { PAGE_SIZE_OPTIONS } from './consts';
 
 addLocaleData(i18n);
-
-export const PAGE_SIZE_OPTIONS = formatSelectOptions<number>([
-  [0, t('page_size.all')],
-  10,
-  20,
-  50,
-  100,
-  200,
-]);
-
-export enum QueryMode {
-  aggregate = 'aggregate',
-  raw = 'raw',
-}
-
-const QueryModeLabel = {
-  [QueryMode.aggregate]: t('Aggregate'),
-  [QueryMode.raw]: t('Raw Records'),
-};
 
 function getQueryMode(controls: ControlStateMapping): QueryMode {
   const mode = controls?.query_mode?.value;
   if (mode === QueryMode.aggregate || mode === QueryMode.raw) {
     return mode as QueryMode;
   }
-  const rawColumns = controls?.all_columns?.value;
-  const hasRawColumns = rawColumns && (rawColumns as string[])?.length > 0;
+  const rawColumns = controls?.all_columns?.value as QueryFormColumn[] | undefined;
+  const hasRawColumns = rawColumns && rawColumns.length > 0;
   return hasRawColumns ? QueryMode.raw : QueryMode.aggregate;
 }
 
@@ -67,9 +59,7 @@ function getQueryMode(controls: ControlStateMapping): QueryMode {
  * Visibility check
  */
 function isQueryMode(mode: QueryMode) {
-  return ({ controls }: ControlPanelsContainerProps) => {
-    return getQueryMode(controls) === mode;
-  };
+  return ({ controls }: ControlPanelsContainerProps) => getQueryMode(controls) === mode;
 }
 
 const isAggMode = isQueryMode(QueryMode.aggregate);
@@ -77,21 +67,13 @@ const isRawMode = isQueryMode(QueryMode.raw);
 
 const queryMode: ControlConfig<'RadioButtonControl'> = {
   type: 'RadioButtonControl',
-  label: t('Query Mode'),
+  label: t('Query mode'),
   default: null,
   options: [
-    {
-      label: QueryModeLabel[QueryMode.aggregate],
-      value: QueryMode.aggregate,
-    },
-    {
-      label: QueryModeLabel[QueryMode.raw],
-      value: QueryMode.raw,
-    },
+    [QueryMode.aggregate, QueryModeLabel[QueryMode.aggregate]],
+    [QueryMode.raw, QueryModeLabel[QueryMode.raw]],
   ],
-  mapStateToProps: ({ controls }) => {
-    return { value: getQueryMode(controls) };
-  },
+  mapStateToProps: ({ controls }) => ({ value: getQueryMode(controls) }),
 };
 
 const all_columns: typeof sharedControls.groupby = {
@@ -115,24 +97,30 @@ const all_columns: typeof sharedControls.groupby = {
 
 const percent_metrics: typeof sharedControls.metrics = {
   type: 'MetricsControl',
-  label: t('Percentage Metrics'),
-  description: t('Metrics for which percentage of total are to be displayed'),
+  label: t('Percentage metrics'),
+  description: t(
+    'Metrics for which percentage of total are to be displayed. Calculated from only data within the row limit.',
+  ),
   multi: true,
   visibility: isAggMode,
-  mapStateToProps: ({ datasource, controls }) => {
-    return {
-      columns: datasource?.columns || [],
-      savedMetrics: datasource?.metrics || [],
-      datasourceType: datasource?.type,
-      queryMode: getQueryMode(controls),
-    };
-  },
+  mapStateToProps: ({ datasource, controls }) => ({
+    columns: datasource?.columns || [],
+    savedMetrics: datasource?.metrics || [],
+    datasourceType: datasource?.type,
+    queryMode: getQueryMode(controls),
+  }),
   default: [],
   validators: [],
 };
 
+const dnd_percent_metrics = {
+  ...percent_metrics,
+  type: 'DndMetricSelect',
+};
+
 const config: ControlPanelConfig = {
   controlPanelSections: [
+    sections.legacyTimeseriesTime,
     {
       label: t('Query'),
       expanded: true,
@@ -167,7 +155,9 @@ const config: ControlPanelConfig = {
         [
           {
             name: 'percent_metrics',
-            config: percent_metrics,
+            config: isFeatureEnabled(FeatureFlag.ENABLE_EXPLORE_DRAG_AND_DROP)
+              ? dnd_percent_metrics
+              : percent_metrics,
           },
         ],
         [
@@ -182,7 +172,7 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Ordering'),
-              description: t('One or many metrics to display'),
+              description: t('Order results by selected columns'),
               multi: true,
               default: [],
               mapStateToProps: ({ datasource }) => ({
@@ -192,13 +182,45 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        ['row_limit'],
+        [
+          {
+            name: 'server_pagination',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Server pagination'),
+              description: t('Enable server side pagination of results (experimental feature)'),
+              default: false,
+            },
+          },
+        ],
+        [
+          {
+            name: 'row_limit',
+            override: {
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                !controls.server_pagination.value,
+            },
+          },
+          {
+            name: 'server_page_length',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              label: t('Server Page Length'),
+              default: 10,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls.server_pagination.value),
+            },
+          },
+        ],
         [
           {
             name: 'include_time',
             config: {
               type: 'CheckboxControl',
-              label: t('Include Time'),
+              label: t('Include time'),
               description: t(
                 'Whether to include the time granularity as defined in the time section',
               ),
@@ -210,9 +232,23 @@ const config: ControlPanelConfig = {
             name: 'order_desc',
             config: {
               type: 'CheckboxControl',
-              label: t('Sort Descending'),
+              label: t('Sort descending'),
               default: true,
               description: t('Whether to sort descending or ascending'),
+              visibility: isAggMode,
+            },
+          },
+        ],
+        [
+          {
+            name: 'show_totals',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Show totals'),
+              default: true,
+              description: t(
+                'Show total aggregations of selected metrics. Note that row limit does not apply to the result.',
+              ),
               visibility: isAggMode,
             },
           },
@@ -230,13 +266,12 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               freeForm: true,
-              label: t('Table Timestamp Format'),
+              label: t('Timestamp format'),
               default: smartDateFormatter.id,
               renderTrigger: true,
-              validators: [validateNonEmpty],
               clearable: false,
               choices: D3_TIME_FORMAT_OPTIONS,
-              description: t('Timestamp Format'),
+              description: t('D3 time format for datetime columns'),
             },
           },
         ],
@@ -247,10 +282,12 @@ const config: ControlPanelConfig = {
               type: 'SelectControl',
               freeForm: true,
               renderTrigger: true,
-              label: t('Page Length'),
+              label: t('Page length'),
               default: null,
               choices: PAGE_SIZE_OPTIONS,
               description: t('Rows per page, 0 means no pagination'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                !controls.server_pagination.value,
             },
           },
           null,
@@ -260,20 +297,20 @@ const config: ControlPanelConfig = {
             name: 'include_search',
             config: {
               type: 'CheckboxControl',
-              label: t('Search Box'),
+              label: t('Search box'),
               renderTrigger: true,
               default: false,
               description: t('Whether to include a client-side search box'),
             },
           },
           {
-            name: 'table_filter',
+            name: 'show_cell_bars',
             config: {
               type: 'CheckboxControl',
-              label: t('Emit Filter Events'),
+              label: t('Cell bars'),
               renderTrigger: true,
-              default: false,
-              description: t('Whether to apply filter to dashboards when table cells are clicked'),
+              default: true,
+              description: t('Whether to display a bar chart background in table columns'),
             },
           },
         ],
@@ -285,7 +322,9 @@ const config: ControlPanelConfig = {
               label: t('Align +/-'),
               renderTrigger: true,
               default: false,
-              description: t('Whether to align the background chart for +/- values'),
+              description: t(
+                'Whether to align background charts with both positive and negative values at 0',
+              ),
             },
           },
           {
@@ -295,34 +334,47 @@ const config: ControlPanelConfig = {
               label: t('Color +/-'),
               renderTrigger: true,
               default: true,
-              description: t('Whether to color +/- values'),
+              description: t(
+                'Whether to colorize numeric values by if they are positive or negative',
+              ),
             },
           },
         ],
+        isFeatureEnabled(FeatureFlag.DASHBOARD_CROSS_FILTERS)
+          ? [
+              {
+                name: 'table_filter',
+                config: {
+                  type: 'CheckboxControl',
+                  label: t('Enable emitting filters'),
+                  renderTrigger: true,
+                  default: false,
+                  description: t(
+                    'Whether to apply filter to dashboards when table cells are clicked',
+                  ),
+                },
+              },
+            ]
+          : [],
         [
           {
-            name: 'show_cell_bars',
+            name: 'column_config',
             config: {
-              type: 'CheckboxControl',
-              label: t('Show Cell Bars'),
+              type: 'ColumnConfigControl',
+              label: t('Customize columns'),
+              description: t('Further customize how to display each column'),
               renderTrigger: true,
-              default: true,
-              description: t('Enable to display bar chart background elements in table columns'),
+              mapStateToProps(explore, control, chart) {
+                return {
+                  queryResponse: chart?.queriesResponse?.[0] as ChartDataResponseResult | undefined,
+                };
+              },
             },
           },
-          null,
         ],
       ],
     },
   ],
-  sectionOverrides: {
-    druidTimeSeries: {
-      controlSetRows: [['granularity', 'druid_time_origin'], ['time_range']],
-    },
-    sqlaTimeSeries: {
-      controlSetRows: [['granularity_sqla', 'time_grain_sqla'], ['time_range']],
-    },
-  },
 };
 
 export default config;

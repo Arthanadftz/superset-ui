@@ -19,10 +19,11 @@
 import * as ApiLegacy from './api/legacy';
 import * as ApiV1 from './api/v1';
 
+export * from './constants';
 export { default as buildQueryContext } from './buildQueryContext';
 export { default as buildQueryObject } from './buildQueryObject';
 export { default as convertFilter } from './convertFilter';
-export { default as convertMetric } from './convertMetric';
+export { default as getMetricLabel } from './getMetricLabel';
 export { default as DatasourceKey } from './DatasourceKey';
 
 export * from './types/AnnotationLayer';

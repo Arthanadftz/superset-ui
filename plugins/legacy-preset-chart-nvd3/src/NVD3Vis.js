@@ -297,8 +297,10 @@ function nvd3Vis(element, props) {
     yAxisFormat,
     yAxis2Format,
     yAxisBounds,
+    yAxis2Bounds,
     yAxisLabel,
     yAxisShowMinMax = false,
+    yAxis2ShowMinMax = false,
     yField,
     yIsLogScale,
   } = props;
@@ -512,7 +514,7 @@ function nvd3Vis(element, props) {
         throw new Error(`Unrecognized visualization for nvd3${vizType}`);
     }
     // Assuming the container has padding already other than for top margin
-    chart.margin({ left: 0, right: 0, bottom: 0 });
+    chart.margin({ left: 0, bottom: 0 });
 
     if (showBarValue) {
       drawBarValues(svg, data, isBarStacked, yAxisFormat);
@@ -615,7 +617,7 @@ function nvd3Vis(element, props) {
     setAxisShowMaxMin(chart.xAxis, xAxisShowMinMax);
     setAxisShowMaxMin(chart.x2Axis, xAxisShowMinMax);
     setAxisShowMaxMin(chart.yAxis, yAxisShowMinMax);
-    setAxisShowMaxMin(chart.y2Axis, yAxisShowMinMax);
+    setAxisShowMaxMin(chart.y2Axis, yAxis2ShowMinMax || yAxisShowMinMax);
 
     if (vizType === 'time_pivot') {
       if (baseColor) {
@@ -668,11 +670,6 @@ function nvd3Vis(element, props) {
       chart.interactiveLayer.tooltip.contentGenerator(d =>
         generateMultiLineTooltipContent(d, xAxisFormatter, yAxisFormatters),
       );
-      if (vizType === 'dual_line') {
-        chart.showLegend(width > BREAKPOINTS.small);
-      } else {
-        chart.showLegend(showLegend);
-      }
     }
     // This is needed for correct chart dimensions if a chart is rendered in a hidden container
     chart.width(width);
@@ -769,6 +766,9 @@ function nvd3Vis(element, props) {
         chart.yAxis1.tickValues(ticks1);
         chart.yAxis2.tickValues(ticks2);
       }
+
+      chart.yDomain1([yAxisBounds[0] || ticks1[0], yAxisBounds[1] || ticks1[ticks1.length - 1]]);
+      chart.yDomain2([yAxis2Bounds[0] || ticks2[0], yAxis2Bounds[1] || ticks2[ticks2.length - 1]]);
     }
 
     if (showMarkers) {
@@ -1158,7 +1158,7 @@ function nvd3Vis(element, props) {
       }
     }
 
-    wrapTooltip(chart, maxWidth);
+    wrapTooltip(chart);
 
     return chart;
   };

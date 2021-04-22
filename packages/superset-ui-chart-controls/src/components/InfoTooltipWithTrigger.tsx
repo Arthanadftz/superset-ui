@@ -16,19 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { CSSProperties } from 'react';
+import React from 'react';
 import { kebabCase } from 'lodash';
-import { Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { TooltipPlacement } from 'antd/lib/tooltip';
 import { t } from '@superset-ui/core';
-
-const tooltipStyle: CSSProperties = { wordWrap: 'break-word' };
+import { Tooltip, TooltipProps } from './Tooltip';
 
 export interface InfoTooltipWithTriggerProps {
   label?: string;
-  tooltip?: string;
+  tooltip?: TooltipProps['title'];
   icon?: string;
   onClick?: () => void;
-  placement?: string;
+  placement?: TooltipPlacement;
   bsStyle?: string;
   className?: string;
 }
@@ -53,7 +52,7 @@ export function InfoTooltipWithTrigger({
       onClick={onClick}
       onKeyPress={
         onClick &&
-        ((event: React.KeyboardEvent) => {
+        (event => {
           if (event.key === 'Enter' || event.key === ' ') {
             onClick();
           }
@@ -65,16 +64,9 @@ export function InfoTooltipWithTrigger({
     return iconEl;
   }
   return (
-    <OverlayTrigger
-      placement={placement}
-      overlay={
-        <Tooltip id={`${kebabCase(label)}-tooltip`} style={tooltipStyle}>
-          {tooltip}
-        </Tooltip>
-      }
-    >
+    <Tooltip id={`${kebabCase(label)}-tooltip`} title={tooltip} placement={placement}>
       {iconEl}
-    </OverlayTrigger>
+    </Tooltip>
   );
 }
 
