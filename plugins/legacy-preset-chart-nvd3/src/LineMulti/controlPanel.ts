@@ -140,7 +140,7 @@ export default {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['adhoc_filters']],
+      controlSetRows: [['adhoc_filters'], ['custom_filters']],
     },
     sections.annotations,
   ],

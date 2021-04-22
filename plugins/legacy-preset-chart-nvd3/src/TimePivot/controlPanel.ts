@@ -40,6 +40,7 @@ export default {
       controlSetRows: [
         ['metric'],
         ['adhoc_filters'],
+        ['custom_filters'],
         [
           {
             name: 'freq',

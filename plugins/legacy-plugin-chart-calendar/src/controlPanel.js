@@ -56,7 +56,7 @@ export default {
           },
         ],
         ['metrics'],
-        ['adhoc_filters'],
+        ['adhoc_filters'], ['custom_filters'],
       ],
     },
     {

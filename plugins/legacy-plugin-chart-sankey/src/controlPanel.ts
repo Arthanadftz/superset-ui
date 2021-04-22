@@ -36,6 +36,7 @@ const config: ControlPanelConfig = {
         ],
         ['metric'],
         ['adhoc_filters'],
+        ['custom_filters'],
         [
           {
             name: 'row_limit',

@@ -48,6 +48,7 @@ export default {
         ],
         ['metric'],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['row_limit'],
       ],
     },

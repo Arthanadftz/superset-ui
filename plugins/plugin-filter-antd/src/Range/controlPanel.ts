@@ -25,7 +25,7 @@ const config: ControlPanelConfig = {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['groupby'], ['adhoc_filters']],
+      controlSetRows: [['groupby'], ['adhoc_filters'], ['custom_filters']],
     },
   ],
   controlOverrides: {

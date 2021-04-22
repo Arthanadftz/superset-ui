@@ -42,6 +42,7 @@ export default {
           },
         ],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['row_limit'],
         ['groupby'],
       ],

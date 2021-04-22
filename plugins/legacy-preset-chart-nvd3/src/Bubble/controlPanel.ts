@@ -42,6 +42,7 @@ export default {
         ['x'],
         ['y'],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['size'],
         [
           {

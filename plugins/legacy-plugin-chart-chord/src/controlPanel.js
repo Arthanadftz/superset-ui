@@ -23,7 +23,7 @@ export default {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['groupby'], ['columns'], ['metric'], ['adhoc_filters'], ['row_limit']],
+      controlSetRows: [['groupby'], ['columns'], ['metric'], ['adhoc_filters'], ['custom_filters'], ['row_limit']],
     },
     {
       label: t('Chart Options'),
