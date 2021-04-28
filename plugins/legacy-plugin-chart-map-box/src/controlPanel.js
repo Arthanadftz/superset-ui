@@ -80,6 +80,7 @@ export default {
         ],
         ['row_limit'],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['groupby'],
       ],
     },

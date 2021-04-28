@@ -217,7 +217,7 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        ['adhoc_filters'],
+        ['adhoc_filters'], ['custom_filters']
       ],
     },
     {

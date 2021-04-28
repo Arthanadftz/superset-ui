@@ -37,6 +37,7 @@ const config: ControlPanelConfig = {
         ['groupby'],
         ['metrics'],
         ['adhoc_filters'],
+        ['custom_filters'],
         [
           {
             name: 'multiSelect',

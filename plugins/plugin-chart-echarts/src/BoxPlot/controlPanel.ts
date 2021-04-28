@@ -27,6 +27,7 @@ export default {
       controlSetRows: [
         ['metrics'],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['groupby'],
         ['columns'],
         ['limit'],

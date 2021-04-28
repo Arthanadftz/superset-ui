@@ -34,6 +34,7 @@ export default {
       controlSetRows: [
         ['metrics'],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['groupby'],
         ['limit', 'timeseries_limit_metric'],
         [

@@ -26,7 +26,7 @@ const config: ControlPanelConfig = {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['metric'], ['adhoc_filters']],
+      controlSetRows: [['metric'], ['adhoc_filters'], ['custom_filters']],
     },
     {
       label: t('Options'),

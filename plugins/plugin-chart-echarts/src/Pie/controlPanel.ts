@@ -26,7 +26,7 @@ const config: ControlPanelConfig = {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['groupby'], ['metric'], ['adhoc_filters'], ['row_limit', null]],
+      controlSetRows: [['groupby'], ['metric'], ['adhoc_filters'], ['custom_filters'], ['row_limit', null]],
     },
     {
       label: t('Chart Options'),

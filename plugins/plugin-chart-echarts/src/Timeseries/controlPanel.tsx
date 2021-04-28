@@ -73,6 +73,7 @@ const config: ControlPanelConfig = {
           },
         ],
         ['adhoc_filters'],
+        ['custom_filters'],
         ['limit', 'timeseries_limit_metric'],
         [
           {

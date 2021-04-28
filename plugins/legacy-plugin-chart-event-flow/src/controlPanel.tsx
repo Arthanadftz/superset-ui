@@ -86,7 +86,7 @@ const config: ControlPanelConfig = {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['adhoc_filters']],
+      controlSetRows: [['adhoc_filters'], ['custom_filters']],
     },
     {
       label: t('Additional metadata'),
